@@ -13,4 +13,6 @@ interface AlarmRepository {
     fun getAllAlarms(): Flow<List<Alarm>>
 
     fun getAlarmById(alarmId: AlarmId): Flow<Alarm?>
+
+    fun toggleAlarm(alarm: Alarm): Flow<Unit>
 }

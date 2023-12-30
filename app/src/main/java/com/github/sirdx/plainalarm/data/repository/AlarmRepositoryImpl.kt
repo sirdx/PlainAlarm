@@ -2,6 +2,7 @@ package com.github.sirdx.plainalarm.data.repository
 
 import com.github.sirdx.plainalarm.data.source.local.db.dao.AlarmDao
 import com.github.sirdx.plainalarm.data.source.local.db.entity.AlarmEntity
+import com.github.sirdx.plainalarm.data.source.local.scheduler.AlarmScheduler
 import com.github.sirdx.plainalarm.domain.model.Alarm
 import com.github.sirdx.plainalarm.domain.model.AlarmId
 import com.github.sirdx.plainalarm.domain.repository.AlarmRepository
@@ -9,7 +10,8 @@ import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class AlarmRepositoryImpl @Inject constructor(
-    private val alarmDao: AlarmDao
+    private val alarmDao: AlarmDao,
+    private val alarmScheduler: AlarmScheduler
 ) : AlarmRepository {
 
     override fun upsertAlarm(alarm: Alarm) = flow {
@@ -30,5 +32,21 @@ class AlarmRepositoryImpl @Inject constructor(
     override fun getAlarmById(alarmId: AlarmId) = flow {
         val alarm = alarmDao.getAlarmById(alarmId)?.toAlarm()
         emit(alarm)
+    }
+
+    override fun toggleAlarm(alarm: Alarm) = flow {
+        val isEnabled = alarm.isEnabled
+
+        if (isEnabled) {
+            alarmScheduler.cancel(alarm)
+        } else {
+            alarmScheduler.schedule(alarm)
+        }
+
+        alarmDao.upsertAlarm(AlarmEntity.fromAlarm(alarm.copy(
+            isEnabled = !isEnabled
+        )))
+
+        emit(Unit)
     }
 }
