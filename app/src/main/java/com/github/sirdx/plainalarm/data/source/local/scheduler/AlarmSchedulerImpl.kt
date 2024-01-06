@@ -1,5 +1,6 @@
 package com.github.sirdx.plainalarm.data.source.local.scheduler
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
@@ -19,6 +20,7 @@ class AlarmSchedulerImpl @Inject constructor(
 
     private val alarmManager = context.getSystemService(AlarmManager::class.java)
 
+    @SuppressLint("ScheduleExactAlarm")
     override fun schedule(alarm: Alarm) {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra(AlarmReceiver.EXTRA_MESSAGE, alarm.name)
@@ -30,10 +32,9 @@ class AlarmSchedulerImpl @Inject constructor(
         val alarmInstant = alarmDateTime.toInstant(timeZone)
         val alarmMillis = alarmInstant.toEpochMilliseconds()
 
-        alarmManager.setRepeating(
+        alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
             alarmMillis,
-            DAY_MILLIS,
             PendingIntent.getBroadcast(
                 context,
                 alarm.id.toInt(),
