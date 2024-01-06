@@ -23,7 +23,7 @@ class AlarmSchedulerImpl @Inject constructor(
     @SuppressLint("ScheduleExactAlarm")
     override fun schedule(alarm: Alarm) {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
-            putExtra(AlarmReceiver.EXTRA_MESSAGE, alarm.name)
+            putExtra(AlarmReceiver.EXTRA_ID, alarm.id)
         }
 
         val timeZone = TimeZone.currentSystemDefault()
@@ -53,9 +53,5 @@ class AlarmSchedulerImpl @Inject constructor(
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
-    }
-    
-    companion object {
-        private const val DAY_MILLIS = 24L * 60L * 60L * 60L * 1000L
     }
 }
