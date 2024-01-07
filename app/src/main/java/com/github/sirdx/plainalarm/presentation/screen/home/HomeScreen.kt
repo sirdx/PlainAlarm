@@ -1,5 +1,10 @@
 package com.github.sirdx.plainalarm.presentation.screen.home
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,13 +31,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.github.sirdx.plainalarm.core.Resource
@@ -126,6 +134,24 @@ private fun HomeScreenAlarms(
     onAlarmToggle: (Alarm, Boolean) -> Unit,
     onAlarmDelete: (Alarm) -> Unit
 ) {
+    val context = LocalContext.current
+
+    var hasNotificationPermission = remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return@remember ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+
+        true
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { hasNotificationPermission = it }
+    )
+
     Scaffold(
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -155,6 +181,12 @@ private fun HomeScreenAlarms(
                 HomeScreenAlarmCard(
                     alarm = alarm,
                     onAlarmToggle = { toggle ->
+                        if (!hasNotificationPermission) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            }
+                        }
+
                         onAlarmToggle(alarm, toggle)
                     },
                     onAlarmDelete = {
@@ -190,7 +222,7 @@ private fun HomeScreenAlarmCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp),
+                .padding(horizontal = 15.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(

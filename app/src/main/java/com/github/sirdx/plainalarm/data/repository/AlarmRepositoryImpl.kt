@@ -20,6 +20,10 @@ class AlarmRepositoryImpl @Inject constructor(
     }
 
     override fun deleteAlarm(alarm: Alarm) = flow {
+        if (alarm.isEnabled) {
+            alarmScheduler.cancel(alarm)
+        }
+
         val affectedRecords = alarmDao.deleteAlarmById(alarm.id)
         emit(affectedRecords > 0)
     }
