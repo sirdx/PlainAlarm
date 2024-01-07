@@ -1,5 +1,7 @@
 package com.github.sirdx.plainalarm.presentation.screen.home
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,6 +28,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -53,7 +57,8 @@ fun HomeScreen(
         onAddAlarm = {
             navController.navigate(Screen.AddAlarm.route)
         },
-        onAlarmToggle = viewModel::toggleAlarm
+        onAlarmToggle = viewModel::toggleAlarm,
+        onAlarmDelete = viewModel::deleteAlarm
     )
 }
 
@@ -61,7 +66,8 @@ fun HomeScreen(
 private fun HomeScreenContent(
     alarms: Resource<List<Alarm>>,
     onAddAlarm: () -> Unit,
-    onAlarmToggle: (Alarm, Boolean) -> Unit
+    onAlarmToggle: (Alarm, Boolean) -> Unit,
+    onAlarmDelete: (Alarm) -> Unit
 ) {
     when (alarms) {
         is Resource.Loading -> HomeScreenLoading()
@@ -69,7 +75,8 @@ private fun HomeScreenContent(
         is Resource.Success -> HomeScreenAlarms(
             alarms = alarms.data,
             onAddAlarm = onAddAlarm,
-            onAlarmToggle = onAlarmToggle
+            onAlarmToggle = onAlarmToggle,
+            onAlarmDelete = onAlarmDelete
         )
 
         is Resource.Error -> HomeScreenError(
@@ -116,7 +123,8 @@ private fun HomeScreenError(
 private fun HomeScreenAlarms(
     alarms: List<Alarm>,
     onAddAlarm: () -> Unit,
-    onAlarmToggle: (Alarm, Boolean) -> Unit
+    onAlarmToggle: (Alarm, Boolean) -> Unit,
+    onAlarmDelete: (Alarm) -> Unit
 ) {
     Scaffold(
         floatingActionButton = {
@@ -148,6 +156,9 @@ private fun HomeScreenAlarms(
                     alarm = alarm,
                     onAlarmToggle = { toggle ->
                         onAlarmToggle(alarm, toggle)
+                    },
+                    onAlarmDelete = {
+                        onAlarmDelete(alarm)
                     }
                 )
                 Spacer(modifier = Modifier.height(10.dp))
@@ -156,14 +167,25 @@ private fun HomeScreenAlarms(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HomeScreenAlarmCard(
     alarm: Alarm,
-    onAlarmToggle: (Boolean) -> Unit
+    onAlarmToggle: (Boolean) -> Unit,
+    onAlarmDelete: () -> Unit
 ) {
+    val haptics = LocalHapticFeedback.current
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .combinedClickable(
+                onClick = { },
+                onLongClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onAlarmDelete()
+                }
+            )
     ) {
         Row(
             modifier = Modifier

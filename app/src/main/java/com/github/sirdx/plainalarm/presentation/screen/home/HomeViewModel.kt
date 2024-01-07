@@ -91,4 +91,23 @@ class HomeViewModel @Inject constructor(
                 }
             }.launchIn(viewModelScope)
     }
+
+    fun deleteAlarm(alarm: Alarm) {
+        deleteAlarmUseCase(alarm)
+            .onEach { success ->
+                if (!success) {
+                    return@onEach
+                }
+
+                _alarms.update { currentState ->
+                    if (currentState !is Resource.Success) {
+                        return@onEach
+                    }
+
+                    Resource.Success(
+                        currentState.data - alarm
+                    )
+                }
+            }.launchIn(viewModelScope)
+    }
 }
