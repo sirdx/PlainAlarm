@@ -8,8 +8,10 @@ import android.content.Intent
 import com.github.sirdx.plainalarm.domain.model.Alarm
 import com.github.sirdx.plainalarm.presentation.AlarmReceiver
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atDate
+import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.todayIn
 import javax.inject.Inject
@@ -21,14 +23,19 @@ class AlarmSchedulerImpl @Inject constructor(
     private val alarmManager = context.getSystemService(AlarmManager::class.java)
 
     @SuppressLint("ScheduleExactAlarm")
-    override fun schedule(alarm: Alarm) {
+    override fun schedule(alarm: Alarm, nextDay: Boolean) {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra(AlarmReceiver.EXTRA_ID, alarm.id)
         }
 
         val timeZone = TimeZone.currentSystemDefault()
-        val today = Clock.System.todayIn(timeZone)
-        val alarmDateTime = alarm.time.atDate(today)
+        var date = Clock.System.todayIn(timeZone)
+
+        if (nextDay) {
+            date = date.plus(1, DateTimeUnit.DAY)
+        }
+
+        val alarmDateTime = alarm.time.atDate(date)
         val alarmInstant = alarmDateTime.toInstant(timeZone)
         val alarmMillis = alarmInstant.toEpochMilliseconds()
 

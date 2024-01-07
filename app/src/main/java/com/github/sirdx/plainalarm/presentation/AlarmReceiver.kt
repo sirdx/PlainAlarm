@@ -7,7 +7,6 @@ import android.util.Log
 import com.github.sirdx.plainalarm.data.source.local.scheduler.AlarmScheduler
 import com.github.sirdx.plainalarm.domain.usecase.alarm.GetAlarmByIdUseCase
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
@@ -34,8 +33,7 @@ class AlarmReceiver : BroadcastReceiver() {
                         }
 
                         Log.i("ALARM", alarm.name)
-                        delay(MINUTE)
-                        alarmScheduler.schedule(alarm)
+                        alarmScheduler.schedule(alarm, nextDay = true)
                     }
                 }.launchIn(this)
         }
@@ -43,6 +41,5 @@ class AlarmReceiver : BroadcastReceiver() {
 
     companion object {
         const val EXTRA_ID = "EXTRA_ID"
-        private const val MINUTE = 60L * 1000L
     }
 }
